@@ -1,5 +1,8 @@
 {
   "name": "GoChat DevContainer",
+  "mounts": [
+    "source=C:\\Users\\zhoubw\\.ssh,target=/root/.ssh,type=bind"
+  ],
   "build": {
     "dockerfile": "Dockerfile",
     "context": "."
