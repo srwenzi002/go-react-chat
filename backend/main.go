@@ -14,6 +14,7 @@ func main() {
     if err := utils.ConnectDB(); err != nil {
         log.Fatalf("Database connection failed: %v", err)
     }
+    utils.TestRedis()
     // 注册路由
     routes.RegisterRoutes(r)
     // 启动服务，监听 8080
