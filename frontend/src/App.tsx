@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import './App.css'
+// import './App.css'
+import { Routes, Route } from 'react-router-dom'
+import { Login, Register } from './components/page/user'
 
-function App() {
+function Home() {
   const [count, setCount] = useState(0)
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
       <div className="flex items-center justify-center space-x-6 mb-8">
@@ -47,6 +48,16 @@ function App() {
         点击 Vite 和 React 徽标了解更多信息
       </p>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/" element={<Home />} />
+    </Routes>
   )
 }
 
