@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button ,Input, Heading, Text } from '@chakra-ui/react';
+import { Box, Button, Input, Heading, Text } from '@chakra-ui/react';
+import requestApi from '../../../utils/requestApi';
+import AuthService from '../../../services/authService';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -12,20 +14,17 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      const res = await fetch('/api/users/login', {
+      const data = await requestApi('/api/users/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        navigate('/');
-      } else {
-        setError(data.message || '登录失败');
-      }
-    } catch {
-      setError('网络错误');
+      // data 就是接口返回的 JSON
+      AuthService.setToken(data.token);
+      AuthService.setUser({ id: data.user.id, nickname: data.user.nickname });
+      navigate('/');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '登录错误';
+      setError(message);
     }
   };
 
