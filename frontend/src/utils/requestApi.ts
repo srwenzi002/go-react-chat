@@ -6,10 +6,10 @@ const requestApi = async (url: string, options: RequestInit = {}) => {
   // 从AuthService获取token
   const token = AuthService.getToken();
 
-  // 如果是GET请求，将token添加到headers
+  // 设置请求头
   const headers = new Headers(options.headers || {});
 
-  if (token) {
+  if (token && url !== '/api/users/login' && url !== '/api/users/register' && url !== '/api/users/logout') {
     headers.append('Authorization', `Bearer ${token}`);
   }
   if (options.method && options.method !== 'GET' && !headers.has('Content-Type')) {
@@ -27,7 +27,11 @@ const requestApi = async (url: string, options: RequestInit = {}) => {
     const data = await response.json();
     console.log('Response:', data); 
 
-    return data; 
+    if (data.code !== 0) {
+      throw new Error(data.message || '请求失败');
+    }
+
+    return data.data; 
   } catch (error) {
     toaster.error({ title: '请求错误', description: (error as Error).message || '网络错误' });
     throw error;

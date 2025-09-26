@@ -1,9 +1,8 @@
-package controllers
+package handler
 
 import (
 	"database/sql"
 	"go-react-chat-backend/utils"
-	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -39,34 +38,34 @@ type LoginRequest struct {
 func Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "参数错误"})
+		utils.SetResponse(c, -1, "参数错误", nil)
 		return
 	}
 	// 检查邮箱是否已注册
 	var exists int
 	err := utils.DB.QueryRow("SELECT COUNT(*) FROM users WHERE email = ?", req.Email).Scan(&exists)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "数据库错误"})
+		utils.SetResponse(c, -1, "数据库错误", nil)
 		return
 	}
 	if exists > 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "邮箱已注册"})
+		utils.SetResponse(c, -1, "邮箱已注册", nil)
 		return
 	}
 	// 密码加密
 	hashedPwd, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "密码加密失败"})
+		utils.SetResponse(c, -1, "密码加密失败", nil)
 		return
 	}
 	// 插入用户
 	res, err := utils.DB.Exec("INSERT INTO users (email, password, nickname, avatar_url, status_message, settings, created_at) VALUES (?, ?, ?, '', '', '{}', NOW())", req.Email, string(hashedPwd), req.Nickname)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "注册失败"})
+		utils.SetResponse(c, -1, "数据库错误", nil)
 		return
 	}
 	userID, _ := res.LastInsertId()
-	c.JSON(http.StatusOK, gin.H{
+	utils.SetResponse(c, 0, "注册成功", gin.H{
 		"id":             userID,
 		"email":          req.Email,
 		"nickname":       req.Nickname,
@@ -81,22 +80,22 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "参数错误"})
+		utils.SetResponse(c, -1, "参数错误", nil)
 		return
 	}
 	// 查询用户
 	var user User
 	err := utils.DB.QueryRow("SELECT id, password, nickname FROM users WHERE email = ?", req.Email).Scan(&user.ID, &user.Password, &user.Nickname)
 	if err == sql.ErrNoRows {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "账号或密码错误"})
+		utils.SetResponse(c, -1, "账号或密码错误", nil)
 		return
 	} else if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "数据库错误"})
+		utils.SetResponse(c, -1, "数据库错误", nil)
 		return
 	}
 	// 校验密码
 	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)) != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "账号或密码错误"})
+		utils.SetResponse(c, -1, "账号或密码错误", nil)
 		return
 	}
 	// 生成 JWT token
@@ -107,17 +106,17 @@ func Login(c *gin.Context) {
 	})
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Token生成失败"})
+		utils.SetResponse(c, -1, "Token生成失败", nil)
 		return
 	}
 
 	// 存储token到Redis
 	err = utils.StoreToken(user.ID, tokenString)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Token存储失败", "error": err.Error()})
+		utils.SetResponse(c, -1, "存储Token失败", nil)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
+	utils.SetResponse(c, 0, "登录成功", gin.H{
 		"token": tokenString,
 		"user": gin.H{
 			"id":       user.ID,
