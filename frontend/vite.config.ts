@@ -5,15 +5,18 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),tsconfigPaths(),tailwindcss()],
+  plugins: [react(), tsconfigPaths(), tailwindcss()],
   server: {
     host: '127.0.0.1',
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
         changeOrigin: true,
-        rewrite: path => path.replace(/^\/api/ , ''),
+        rewrite: path => path.replace(/^\/api/, ''),
       }
+    },
+    watch: {
+      usePolling: true
     }
   },
 })

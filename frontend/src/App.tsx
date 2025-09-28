@@ -4,14 +4,21 @@ import { Login, Register } from './components/page/user'
 import ChannelList from './components/layout/ChannelList'
 import ServerList from './components/layout/ServerList'
 import ChatWindow from './components/layout/ChatWindow'
+import { HStack  } from '@chakra-ui/react'
 
 function Home() {
   return (
-    <div className="flex h-screen">
+    <HStack gap={0}
+      w="100%"
+      h="100%"
+      overflow="hidden" // 防止浏览器出现滚动条
+      bg="gray.800"
+      alignItems="stretch"
+    >
       <ServerList />
       <ChannelList />
       <ChatWindow />
-    </div>
+    </HStack>
 
   )
 }
